@@ -1,0 +1,55 @@
+{
+    "name": "ngorder/q",
+    "description": "Simple php-amqplib wrapper for Laravel",
+    "keywords": [
+        "ngorder",
+        "q"
+    ],
+    "homepage": "https://github.com/ngorder/q",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Faizal Alviansyah",
+            "email": "faizal@team.ngorder.id",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4|^8.0",
+        "illuminate/support": "^8.0",
+        "php-amqplib/php-amqplib": ">=3.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^6.0",
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ngorder\\Q\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ngorder\\Q\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ngorder\\Q\\QServiceProvider"
+            ],
+            "aliases": {
+                "Q": "Ngorder\\Q\\QFacade"
+            }
+        }
+    }
+}

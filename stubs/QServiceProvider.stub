@@ -1,0 +1,17 @@
+<?php
+
+%namespace%;
+
+use Ngorder\Q\QServiceProvider as BaseProvider;
+
+class QServiceProvider extends BaseProvider
+{
+    protected $routing = [
+        //
+    ];
+
+    public function boot(): void
+    {
+       parent::boot();
+    }
+}
