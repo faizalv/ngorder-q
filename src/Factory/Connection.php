@@ -11,9 +11,8 @@ class Connection
     private $connection, $channel, $config, $routing_key, $queue_name, $exchange_name, $exchange_type;
     public $code;
 
-    public function __construct(array $config, $routing_key = null)
+    public function __construct(array $config)
     {
-        $this->routing_key = $routing_key;
         $this->config = $config;
     }
 

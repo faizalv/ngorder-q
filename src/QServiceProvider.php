@@ -5,10 +5,11 @@ namespace Ngorder\Q;
 use Illuminate\Support\ServiceProvider;
 use Ngorder\Q\Console\QConsume;
 use Ngorder\Q\Console\QInstall;
-use Ngorder\Q\Facades\Message;
 use Ngorder\Q\Factory\Connection;
-use Ngorder\Q\Factory\Consumer;
 use Ngorder\Q\Factory\Router;
+use Ngorder\Q\Factory\Publisher;
+use Ngorder\Q\Factory\Consumer;
+use Ngorder\Q\Facades\Message;
 
 class QServiceProvider extends ServiceProvider
 {
@@ -30,11 +31,11 @@ class QServiceProvider extends ServiceProvider
             ]);
             $router = new Router($this->routing);
             $this->app->singleton(Consumer::class, function () use ($connection, $router) {
-                return new Consumer($connection, $router);
+                return new Consumer($connection, $router, $this->getConfig());
             });
         } else {
-            $this->app->singleton(QMessage::class, function () use ($connection) {
-                return new QMessage($connection);
+            $this->app->singleton(Publisher::class, function () use ($connection) {
+                return new Publisher($connection);
             });
             $this->setMessageMacro();
         }
@@ -70,15 +71,15 @@ class QServiceProvider extends ServiceProvider
     private function setMessageMacro()
     {
         Message::macro('setExchange', function ($name, $type) {
-            return app(QMessage::class)->setExchange($name, $type);
+            return app(Publisher::class)->setExchange($name, $type);
         });
 
         Message::macro('setQueue', function ($name, $arguments) {
-            return app(QMessage::class)->setQueue($name, $arguments);
+            return app(Publisher::class)->setQueue($name, $arguments);
         });
 
         Message::macro('publish', function ($routing_key, $message) {
-            return app(QMessage::class)->publish($routing_key, $message);
+            return app(Publisher::class)->publish($routing_key, $message);
         });
     }
 }

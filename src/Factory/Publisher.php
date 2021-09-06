@@ -1,11 +1,10 @@
 <?php
 
-namespace Ngorder\Q;
+namespace Ngorder\Q\Factory;
 
-use Ngorder\Q\Factory\Connection;
 use PhpAmqpLib\Message\AMQPMessage;
 
-class QMessage
+class Publisher
 {
     private $connection, $exchange_name, $exchange_type, $queue_name, $queue_args;
 
@@ -38,8 +37,8 @@ class QMessage
         if (is_array($message)) {
             $message = json_encode($message);
         }
-        $bytes = new AMQPMessage($message);
-        $connection->getChannel()->basic_publish($bytes, $connection->getExchangeName(), $routing_key);
+        $message = new AMQPMessage($message);
+        $connection->getChannel()->basic_publish($message, $connection->getExchangeName(), $routing_key);
         $connection->getChannel()->close();
     }
 }
