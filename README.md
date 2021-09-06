@@ -1,32 +1,72 @@
-# Very short description of the package
+# Ngorder Q
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/ngorder/q.svg?style=flat-square)](https://packagist.org/packages/ngorder/q)
 [![Total Downloads](https://img.shields.io/packagist/dt/ngorder/q.svg?style=flat-square)](https://packagist.org/packages/ngorder/q)
-![GitHub Actions](https://github.com/ngorder/q/actions/workflows/main.yml/badge.svg)
 
-This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what PSRs you support to avoid any confusion with users and contributors.
+Simple Laravel wrapper for php-amqplib/php-amqplib
 
 ## Installation
 
-You can install the package via composer:
+Run composer:
 
 ```bash
 composer require ngorder/q
 ```
-
-## Usage
-
-```php
-// Usage description here
-```
-
-### Testing
+Publish the config file and service provider with this Artisan command
 
 ```bash
-composer test
+php artisan q:install
 ```
+Two files will be generated, a config file located in `config/q.php` and a provider located in
+`app/Providers/QServiceProvider.php`
 
-### Changelog
+## Usage
+First, make sure to update the configuration file.
+### Publishing a Message
+The `Message` facade provides functionality to publish a message, you can publish a message by calling the
+`publish` method, which needs 2 parameters: routing key and the message you want to send, it can be an array or a string.
+
+```php
+\Ngorder\Q\Facades\Message::publish('test.route', [
+            'message' => 'Hello World'
+ ]);
+```
+The `publish` method will take the configuration from `app/q.php` to create an exchange and a queue if it does not exist yet. However you can publish a message to
+different exchange and queue.
+
+```php
+\Ngorder\Q\Facades\Message::setExchange('log', 'topic')
+            ->setQueue('error.log', [
+                'x-queue-type' => 'quorum'
+            ])->publish('error', [
+                'message' => 'Hello World'
+            ]);
+```
+By setting the queue and exchange when publishing a message, it will automatically bind the newly created exchange and queue with the routing key used in `publish`.
+
+### Routing
+You can attach a method to handle specific routing key in `QServiceProvider`
+```php
+    protected $routing = [
+        'hello.*' => [MyConsumer::class, 'handleWildcard'],
+        'test.key' => [AnotherConsumer::class, 'handleIt']
+    ];
+```
+Or invokable class
+```php
+    protected $routing = [
+        'some.key' => ThisIsInvokable::class,
+    ];
+```
+### Consuming
+To run consumer, first make sure the routing key is registered within the `QServiceProvider`. You can run this command after that:
+```shell
+php artisan q:consume my.routing.key
+```
+For now, the consumer only take configuration from `app/q.php` to bind the default exchange and queue and cannot be used with custom exchange and queue.
+
+
+## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
 
@@ -34,19 +74,6 @@ Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recen
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
-### Security
-
-If you discover any security related issues, please email faizal@team.ngorder.id instead of using the issue tracker.
-
-## Credits
-
--   [Faizal Alviansyah](https://github.com/ngorder)
--   [All Contributors](../../contributors)
-
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
-## Laravel Package Boilerplate
-
-This package was generated using the [Laravel Package Boilerplate](https://laravelpackageboilerplate.com).

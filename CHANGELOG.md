@@ -2,6 +2,10 @@
 
 All notable changes to `q` will be documented in this file
 
-## 1.0.0 - 201X-XX-XX
+## 1.0.0-beta - 2021-09-06
 
-- initial release
+### Initial Release
+Base feature:
+- Publish message
+- Routing
+- Consume message
