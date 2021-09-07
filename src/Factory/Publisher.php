@@ -3,6 +3,7 @@
 namespace Ngorder\Q\Factory;
 
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Wire\AMQPTable;
 
 class Publisher
 {
@@ -35,9 +36,18 @@ class Publisher
             ->makeQueue($this->queue_name, $this->queue_args)
             ->bind();
         if (is_array($message)) {
+            $headers = new AMQPTable([
+                'Content-type' => 'application/json'
+            ]);
             $message = json_encode($message);
+
+        } else {
+            $headers = new AMQPTable([
+                'Content-type' => 'text/plain'
+            ]);
         }
         $message = new AMQPMessage($message);
+        $message->set('application_headers', $headers);
         $connection->getChannel()->basic_publish($message, $connection->getExchangeName(), $routing_key);
         $connection->getChannel()->close();
     }

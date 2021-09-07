@@ -3,6 +3,7 @@
 namespace Ngorder\Q\Factory;
 
 use Exception;
+use PhpAmqpLib\Message\AMQPMessage;
 
 class Consumer
 {
@@ -52,8 +53,11 @@ class Consumer
             ->makeExchange($this->exchange_name, $this->exchange_type)
             ->makeQueue($this->queue_name, $this->queue_args)
             ->bind();
-        $connection->getChannel()->basic_consume($connection->getQName(), '', false, true, false, false, function ($bytes) {
-            $message = json_decode($bytes->body, true);
+        $connection->getChannel()->basic_consume($connection->getQName(), '', false, true, false, false, function (AMQPMessage $bytes) {
+            $properties = $bytes->get_properties();
+            $content_type = $properties['application_headers']['Content-type'] ?? null;
+            $message = $content_type === 'application/json' ? json_decode($bytes->body, true) : $bytes->body;
+
             if (is_array($this->consumer)){
                 $consumer = [new $this->consumer[0](), $this->consumer[1]];
                 call_user_func($consumer, $message);
@@ -62,6 +66,7 @@ class Consumer
             }
             info("QConsume [". $this->routing_key ."] message handled");
         });
+
         while(true) {
             $this->channel->wait();
         }

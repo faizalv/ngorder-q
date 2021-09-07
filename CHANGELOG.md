@@ -9,3 +9,7 @@ Base feature:
 - Publish message
 - Routing
 - Consume message
+
+## 1.0.1-beta - 2021-09-07
+Fix:
+- Publishing a string caused `null` in consumer
