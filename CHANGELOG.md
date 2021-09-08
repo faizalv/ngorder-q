@@ -17,3 +17,7 @@ Fix:
 ## 1.2.0-beta - 2021-09-08
 Feature:
 - Publish message with a delay
+
+## 1.2.1-beta - 2021-09-08
+Fix:
+- Consumer parse AMQPTable as array error
