@@ -55,7 +55,8 @@ class Consumer
             ->bind();
         $connection->getChannel()->basic_consume($connection->getQName(), '', false, true, false, false, function (AMQPMessage $bytes) {
             $properties = $bytes->get_properties();
-            $content_type = $properties['application_headers']['Content-type'] ?? null;
+            $headers = $properties['application_headers']->getNativeData();
+            $content_type = $headers['Content-type'] ?? null;
             $message = $content_type === 'application/json' ? json_decode($bytes->body, true) : $bytes->body;
 
             if (is_array($this->consumer)){
