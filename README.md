@@ -34,6 +34,8 @@ The `Message` facade provides functionality to publish a message, you can publis
 The `publish` method will take the configuration from `app/q.php` to create an exchange and a queue if it does not exist yet. However you can publish a message to
 different exchange and queue.
 
+#### Publish to Specific Exchange and Queue
+
 ```php
 \Ngorder\Q\Facades\Message::setExchange('log', 'topic')
             ->setQueue('error.log', [
@@ -44,6 +46,14 @@ different exchange and queue.
 ```
 By setting the queue and exchange when publishing a message, it will automatically bind the newly created exchange and queue with the routing key used in `publish`.
 
+#### Delaying a Message
+```php
+\Ngorder\Q\Facades\Message::delay(2)->publish('test.route', [
+            'message' => 'Hello World'
+ ]);
+```
+Delay a message (in minutes) before it gets consumed by the consumer.
+
 ### Routing
 You can attach a method to handle specific routing key in `QServiceProvider`
 ```php
@@ -52,7 +62,7 @@ You can attach a method to handle specific routing key in `QServiceProvider`
         'test.key' => [AnotherConsumer::class, 'handleIt']
     ];
 ```
-Or invokable class
+Or an invokable class
 ```php
     protected $routing = [
         'some.key' => ThisIsInvokable::class,

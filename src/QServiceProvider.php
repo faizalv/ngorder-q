@@ -78,6 +78,10 @@ class QServiceProvider extends ServiceProvider
             return app(Publisher::class)->setQueue($name, $arguments);
         });
 
+        Message::macro('delay', function ($minutes) {
+            return app(Publisher::class)->delay($minutes);
+        });
+
         Message::macro('publish', function ($routing_key, $message) {
             return app(Publisher::class)->publish($routing_key, $message);
         });

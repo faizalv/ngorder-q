@@ -88,6 +88,11 @@ class Connection
         return $this->queue_name;
     }
 
+    public function getActiveConfig()
+    {
+        return $this->config;
+    }
+
     public function reopenChannel()
     {
         if (!$this->channel->is_open()) {
