@@ -4,15 +4,32 @@ namespace Ngorder\Q\Facades;
 
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Traits\Macroable;
-use Ngorder\Q\Factory\Publisher;
+use Ngorder\Q\Amqp\Helpers\Instances;
+use Ngorder\Q\Publisher;
 
 /**
- * @method static Publisher setExchange(string $name, string $type)
- * @method static Publisher setQueue(string $name, array $arguments)
- * @method static Publisher delay(int|float $minutes)
- * @method static void publish(string $routing_key, array|string $message)
+ * @method static void startFake()
+ * @method static void stopFake()
  */
 class Message extends Facade
 {
     use Macroable;
+
+    /**
+     * @param int $minutes
+     * @return Publisher
+     */
+    public static function delay(int $minutes): Publisher
+    {
+        return Instances::getPublisher()->delay($minutes);
+    }
+
+    /**
+     * @param string $routing_key
+     * @param array|string $message
+     */
+    public static function publish(string $routing_key, $message)
+    {
+        Instances::getPublisher()->publish($routing_key, $message);
+    }
 }

@@ -5,7 +5,7 @@
         "ngorder",
         "q"
     ],
-    "homepage": "https://github.com/ngorder/q",
+    "homepage": "https://github.com/faizalv/ngorder-q",
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -46,10 +46,7 @@
         "laravel": {
             "providers": [
                 "Ngorder\\Q\\QServiceProvider"
-            ],
-            "aliases": {
-                "Q": "Ngorder\\Q\\QFacade"
-            }
+            ]
         }
     }
 }

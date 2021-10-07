@@ -5,7 +5,7 @@ namespace Ngorder\Q\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 
-class QInstall extends Command
+class InstallCommand extends Command
 {
     protected $signature = "q:install";
     protected $description = "Install Q";

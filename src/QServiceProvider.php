@@ -3,41 +3,52 @@
 namespace Ngorder\Q;
 
 use Illuminate\Support\ServiceProvider;
-use Ngorder\Q\Console\QConsume;
-use Ngorder\Q\Console\QInstall;
-use Ngorder\Q\Factory\Connection;
-use Ngorder\Q\Factory\Router;
-use Ngorder\Q\Factory\Publisher;
-use Ngorder\Q\Factory\Consumer;
+use Ngorder\Q\Amqp\Contracts\QConnection;
+use Ngorder\Q\Amqp\Connection;
+use Ngorder\Q\Amqp\Helpers\Instances;
+use Ngorder\Q\Amqp\Router;
+use Ngorder\Q\Console\ConsumeCommand;
+use Ngorder\Q\Console\InstallCommand;
 use Ngorder\Q\Facades\Message;
+use Ngorder\Q\Mocker\Factory as Mocker;
 
 class QServiceProvider extends ServiceProvider
 {
-    protected $routing = [];
+    protected array $routing = [];
 
     /**
      * Bootstrap the application services.
      */
     public function boot()
     {
-        $connection = new Connection($this->getConfig());
+        $this->app->singleton(QConnection::class, function () {
+            return new Connection($this->getConfig());
+        });
+
+        $this->app->singleton(Publisher::class, function () {
+            return new Publisher(Instances::getConnection());
+        });
+
+        $this->app->singleton(Router::class, function () {
+            return new Router($this->routing);
+        });
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../config/q.php' => config_path('q.php'),
             ], 'config');
             $this->commands([
-                QInstall::class,
-                QConsume::class,
+                InstallCommand::class,
+                ConsumeCommand::class,
             ]);
-            $router = new Router($this->routing);
-            $this->app->singleton(Consumer::class, function () use ($connection, $router) {
-                return new Consumer($connection, $router, $this->getConfig());
+
+            Message::macro('startFake', function () {
+                Mocker::startFake();
             });
-        } else {
-            $this->app->singleton(Publisher::class, function () use ($connection) {
-                return new Publisher($connection);
+
+            Message::macro('stopFake', function () {
+                Mocker::stopFake();
             });
-            $this->setMessageMacro();
         }
     }
 
@@ -46,7 +57,7 @@ class QServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->publishSomething();
+        $this->publishEssentials();
     }
 
     private function getConfig()
@@ -55,7 +66,7 @@ class QServiceProvider extends ServiceProvider
         return $this->app['config']['q'];
     }
 
-    private function publishSomething()
+    private function publishEssentials()
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -66,24 +77,5 @@ class QServiceProvider extends ServiceProvider
                 __DIR__ . "/../stubs/$provider.stub" => $this->app->path("Providers/$provider.php"),
             ], 'ngorder-q-provider');
         }
-    }
-
-    private function setMessageMacro()
-    {
-        Message::macro('setExchange', function ($name, $type) {
-            return app(Publisher::class)->setExchange($name, $type);
-        });
-
-        Message::macro('setQueue', function ($name, $arguments) {
-            return app(Publisher::class)->setQueue($name, $arguments);
-        });
-
-        Message::macro('delay', function ($minutes) {
-            return app(Publisher::class)->delay($minutes);
-        });
-
-        Message::macro('publish', function ($routing_key, $message) {
-            return app(Publisher::class)->publish($routing_key, $message);
-        });
     }
 }

@@ -6,7 +6,7 @@ use Ngorder\Q\QServiceProvider as BaseProvider;
 
 class QServiceProvider extends BaseProvider
 {
-    protected $routing = [
+    protected array $routing = [
         //
     ];
 
