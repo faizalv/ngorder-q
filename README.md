@@ -34,18 +34,6 @@ The `Message` facade provides functionality to publish a message, you can publis
 The `publish` method will take the configuration from `app/q.php` to create an exchange and a queue if it does not exist yet. However you can publish a message to
 different exchange and queue.
 
-#### Publish to Specific Exchange and Queue
-
-```php
-\Ngorder\Q\Facades\Message::setExchange('log', 'topic')
-            ->setQueue('error.log', [
-                'x-queue-type' => 'quorum'
-            ])->publish('error', [
-                'message' => 'Hello World'
-            ]);
-```
-By setting the queue and exchange when publishing a message, it will automatically bind the newly created exchange and queue with the routing key used in `publish`.
-
 #### Delaying a Message
 ```php
 \Ngorder\Q\Facades\Message::delay(2)->publish('test.route', [
@@ -73,7 +61,15 @@ To run consumer, first make sure the routing key is registered within the `QServ
 ```shell
 php artisan q:consume my.routing.key
 ```
-For now, the consumer only take configuration from `app/q.php` to bind the default exchange and queue and cannot be used with custom exchange and queue.
+Available options:
+```shell
+--tries=3
+```
+Maximal number of tries when a message failed to consume.
+```shell
+--max-memory=128
+```
+Maximum memory usage.
 
 
 ## Changelog

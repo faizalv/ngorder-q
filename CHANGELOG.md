@@ -21,3 +21,11 @@ Feature:
 ## 1.2.1-beta - 2021-09-08
 Fix:
 - Consumer parse AMQPTable as array error
+
+## 1.3-beta - 2021-10-13
+Refactor:
+- OOP style
+
+Features:
+- Consumer max tries
+- Consumer max memory
