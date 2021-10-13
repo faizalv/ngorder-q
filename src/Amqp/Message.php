@@ -41,7 +41,7 @@ class Message
 
     public function getMessage()
     {
-        $content_type = $this->getHeaders() ?? null;
+        $content_type = $this->getHeaders()['Content-type'] ?? null;
         return $content_type === 'application/json' ? json_decode($this->parent->body, true) : $this->parent->body;
     }
 

@@ -37,6 +37,7 @@ class Consumer
     {
         $this->connection->connect();
         $this->connection->openChannel();
+        $this->connection->getChannel()->basic_qos(null, 1, false);
     }
 
     public function prepare(string $routing_key)
