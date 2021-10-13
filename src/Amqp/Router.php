@@ -36,7 +36,7 @@ class Router
     {
         if ($this->hasRegistered($routing_key)) {
                 $consumer = $this->routing[$routing_key];
-                if (is_array($consumer) && is_callable($consumer)) {
+                if (is_array($consumer) && is_callable([new $consumer[0](), $consumer[1]])) {
                     return [new $consumer[0](), $consumer[1]];
                 } elseif (is_callable(new $consumer())) {
                     return [new $consumer(), '__invoke'];
