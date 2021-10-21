@@ -15,10 +15,10 @@ class Context implements QContext
     private ?string $queue_name;
     private string $routing_key;
 
-    public function __construct(QConnection $connection)
+    public function __construct(QConnection $connection, string $channel_tag)
     {
         $this->connection = $connection;
-        $this->channel = $this->connection->getChannel();
+        $this->channel = $this->connection->getChannel($channel_tag);
     }
 
     public function setRoutingKey(string $routing_key): Context

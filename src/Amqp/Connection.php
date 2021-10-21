@@ -10,7 +10,7 @@ class Connection implements QConnection
 {
     private array $config;
     private AMQPStreamConnection $connection;
-    private AMQPChannel $channel;
+    private array $channels;
 
     public function __construct(array $config)
     {
@@ -32,25 +32,27 @@ class Connection implements QConnection
         return $this;
     }
 
-    public function openChannel(): void
+    public function openChannel(string $tag): void
     {
-        $this->channel = $this->connection->channel();
+        if (!isset($this->channel[$tag])) {
+            $this->channels[$tag] = $this->connection->channel();
+        }
     }
 
-    public function getChannel(): AMQPChannel
+    public function getChannel(string $tag): AMQPChannel
     {
-        return $this->channel;
+        return $this->channels[$tag];
     }
 
-    public function closeChannel(): void
+    public function closeChannel(string $tag): void
     {
-        $this->channel->close();
+        $this->channels[$tag]->close();
     }
 
-    public function reopenChannel(): void
+    public function reopenChannel(string $tag): void
     {
-        if (!$this->channel->is_open()) {
-            $this->channel = $this->connection->channel();
+        if (!$this->channels[$tag]->is_open()) {
+            $this->channels[$tag] = $this->connection->channel();
         }
     }
 

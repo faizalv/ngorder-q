@@ -23,7 +23,7 @@ class Publisher
     {
         $this->connection = $connection;
         $this->connection->connect();
-        $this->connection->openChannel();
+        $this->connection->openChannel('publish');
     }
 
     public function setExchange(string $exchange_name, string $exchange_type): Publisher
@@ -48,7 +48,6 @@ class Publisher
 
     public function publish($routing_key, $message): void
     {
-        $this->connection->reopenChannel();
         $this->createContext($routing_key);
         if ($this->delay > 0) {
             $this->prepareDelay($routing_key);
@@ -66,7 +65,7 @@ class Publisher
     {
         if (empty($this->queue_name)) {
             $this->queue_name = $routing_key . '.delayer';
-        } elseif (!str_contains($this->queue_name, '.delayer')) {
+        } elseif (strpos($this->queue_name, '.delayer') === false) {
             $this->queue_name = $this->queue_name . '.delayer';
         }
         $active_config = $this->connection->getConfig();
@@ -74,7 +73,7 @@ class Publisher
         if (empty($this->exchange_name)) {
             $this->exchange_name = $default_exchange_name . '.delayer';
             $this->queue_args['x-dead-letter-exchange'] = $default_exchange_name;
-        } elseif (!str_contains($this->exchange_name, '.delayer')) {
+        } elseif (strpos($this->exchange_name, '.delayer') === false) {
             $this->queue_args['x-dead-letter-exchange'] = $this->exchange_name;
             $this->exchange_name = $this->exchange_name . '.delayer';
         } else {
@@ -86,7 +85,7 @@ class Publisher
 
     private function createContext($routing_key): void
     {
-        $this->context = new Context($this->connection);
+        $this->context = new Context($this->connection, 'publish');
         $this->context->setRoutingKey($routing_key)
             ->makeExchange($this->exchange_name, $this->exchange_type)
             ->makeQueue($this->queue_name, $this->queue_args)

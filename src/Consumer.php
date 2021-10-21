@@ -36,8 +36,8 @@ class Consumer
     public function connect()
     {
         $this->connection->connect();
-        $this->connection->openChannel();
-        $this->connection->getChannel()->basic_qos(null, 1, false);
+        $this->connection->openChannel('consume');
+        $this->connection->getChannel('consume')->basic_qos(null, 1, false);
     }
 
     public function prepare(string $routing_key)
@@ -76,13 +76,13 @@ class Consumer
         Help::print($this->getTime() . 'Started');
 
         while (true) {
-            $this->connection->getChannel()->wait();
+            $this->connection->getChannel('consume')->wait();
         }
     }
 
     private function createContext(): void
     {
-        $this->context = new Context($this->connection);
+        $this->context = new Context($this->connection, 'consume');
         $this->context->setRoutingKey($this->routing_key)
             ->makeExchange($this->exchange_name, $this->exchange_type)
             ->makeQueue($this->queue_name, $this->queue_args)

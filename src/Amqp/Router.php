@@ -48,12 +48,11 @@ class Router
 
     public function send(Message $message, QConnection $connection, QContext $context): void
     {
-        $connection->getChannel()->basic_publish(
+        $connection->getChannel('publish')->basic_publish(
             $message->parent(),
             $context->getExchangeName(),
             $context->getRoutingKey()
         );
-        $connection->getChannel()->close();
     }
 
     /**
@@ -63,7 +62,7 @@ class Router
     {
         $routing_key = $context->getRoutingKey();
         if ($this->hasRegistered($routing_key)) {
-            $connection->getChannel()->basic_consume(
+            $connection->getChannel('consume')->basic_consume(
                 $context->getQueueName(),
                 QConsumer::DEFAULT_CONSUMER_TAG,
                 QConsumer::Q_NO_LOCAL,
