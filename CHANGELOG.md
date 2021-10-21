@@ -29,3 +29,16 @@ Refactor:
 Features:
 - Consumer max tries
 - Consumer max memory
+
+## 1.3.1-beta - 2021-10-13
+Fix:
+- Fail converting Json to Array
+- Set prefetch to 1
+
+## 1.3.2-beta - 2021-10-13
+Fix:
+- Update `is_callable` usage for PHP8
+
+## 1.3.3-beta - 2021-10-21
+Refactor:
+- Multiple channels usage
