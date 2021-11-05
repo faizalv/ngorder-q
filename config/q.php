@@ -1,20 +1,20 @@
 <?php
 
+use \Ngorder\Q\Amqp\Contracts\ExchangeType;
+use Ngorder\Q\Amqp\Contracts\QueueType;
 
 return [
     'connect_to' => 'default',
 
     'exchange' => [
+        'type' => ExchangeType::TOPIC,
         'name' => 'events',
-        'type' => 'topic'
     ],
 
     'queue' => [
+        'type' => QueueType::CLASSIC,
         'naming' => [
             'prefix' => 'Q'
-        ],
-        'arguments' => [
-            'type' => 'classic'
         ]
     ],
 

@@ -26,8 +26,8 @@ class Help
     public static function parseQArguments(array $config, ?array $arguments): AMQPTable
     {
         if (empty($arguments)) {
-            if (isset($config['queue']['arguments']['type'])) {
-                $arguments['x-queue-type'] = $config['queue']['arguments']['type'];
+            if (isset($config['queue']['type'])) {
+                $arguments['x-queue-type'] = $config['queue']['type'];
             }
         }
         return new AMQPTable($arguments);

@@ -9,7 +9,7 @@ use Ngorder\Q\Amqp\Helpers\Instances;
 use Ngorder\Q\Amqp\Router;
 use Ngorder\Q\Console\ConsumeCommand;
 use Ngorder\Q\Console\InstallCommand;
-use Ngorder\Q\Facades\Message;
+use Ngorder\Q\Facades\NgorderQ;
 use Ngorder\Q\Mocker\Factory as Mocker;
 
 class QServiceProvider extends ServiceProvider
@@ -42,11 +42,11 @@ class QServiceProvider extends ServiceProvider
                 ConsumeCommand::class,
             ]);
 
-            Message::macro('startFake', function () {
+            NgorderQ::macro('startFake', function () {
                 Mocker::startFake();
             });
 
-            Message::macro('stopFake', function () {
+            NgorderQ::macro('stopFake', function () {
                 Mocker::stopFake();
             });
         }

@@ -27,16 +27,16 @@ The `Message` facade provides functionality to publish a message, you can publis
 `publish` method, which needs 2 parameters: routing key and the message you want to send, it can be an array or a string.
 
 ```php
-\Ngorder\Q\Facades\Message::publish('test.route', [
+\Ngorder\Q\Facades\NgorderQ::publish('test.route', [
             'message' => 'Hello World'
  ]);
 ```
-The `publish` method will take the configuration from `app/q.php` to create an exchange and a queue if it does not exist yet. However you can publish a message to
-different exchange and queue.
+The `publish` method will take the configuration from `app/q.php` to create an exchange and a queue if it does not exist yet.
 
 #### Delaying a Message
+
 ```php
-\Ngorder\Q\Facades\Message::delay(2)->publish('test.route', [
+\Ngorder\Q\Facades\NgorderQ::delay(2)->publish('test.route', [
             'message' => 'Hello World'
  ]);
 ```
@@ -47,7 +47,11 @@ You can attach a method to handle specific routing key in `QServiceProvider`
 ```php
     protected $routing = [
         'hello.*' => [MyConsumer::class, 'handleWildcard'],
-        'test.key' => [AnotherConsumer::class, 'handleIt']
+        'test.key' => [AnotherConsumer::class, 'handleIt'],
+        'another.key' => [
+            [MultiConsumer::class, 'fun1'],
+            [MultiConsumer::class, 'fun2']                        
+        ]         
     ];
 ```
 Or an invokable class

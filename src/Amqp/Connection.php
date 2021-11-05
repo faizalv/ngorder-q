@@ -60,4 +60,9 @@ class Connection implements QConnection
     {
         return $this->config;
     }
+
+    public function isConnected(): bool
+    {
+        return $this->connection->isConnected();
+    }
 }

@@ -10,14 +10,15 @@ use Ngorder\Q\Amqp\Contracts\QContext;
 use Ngorder\Q\Amqp\Helpers\Help;
 use Ngorder\Q\Amqp\Helpers\Instances;
 use Ngorder\Q\Amqp\Message;
+use Ngorder\Q\Amqp\Router;
 use PhpAmqpLib\Message\AMQPMessage;
 
 class Consumer
 {
     private QConnection $connection;
     private QContext $context;
-    private array $consumer;
-    private array $consumer_string;
+    private array $consumers;
+    private array $failed_consumers;
     private ?string $exchange_name = null;
     private ?string $exchange_type = null;
     private ?string $queue_name = null;
@@ -44,8 +45,7 @@ class Consumer
     {
         $this->routing_key = $routing_key;
         try {
-            $this->consumer = Instances::getRouter()->getConsumer($this->routing_key);
-            $this->consumer_string = [get_class($this->consumer[0]), $this->consumer[1]];
+            $this->consumers = $this->router()->getConsumer($this->routing_key);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             Help::print($this->getTime() . $e->getMessage(), 'error');
@@ -67,7 +67,7 @@ class Consumer
 
     public function work()
     {
-        Instances::getRouter()->receive(
+        $this->router()->receive(
             $this->connection,
             $this->context,
             $this->callback
@@ -99,33 +99,105 @@ class Consumer
 
     private function consume(Message $message): void
     {
-        try {
-            call_user_func($this->consumer, $message->getMessage());
+        $success = $this->fire($message);
+        if ($success) {
+            dump('call ack: success');
             $this->ack($message);
-        } catch (\Exception $e) {
-            if ($this->tries === $this->max_tries) {
-                $this->nack($message);
-                $this->tries = 0;
+        } else {
+            $success_retry = $this->retry($message);
+            if ($success_retry) {
+                dump('call ack: success retry');
+                $this->ack($message);
             } else {
-                Help::print(
-                    $this->getTime() . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine(),
-                    'error'
+                $this->nack($message);
+            }
+            $this->failed_consumers = [];
+            $this->tries = 0;
+        }
+    }
+
+    private function fire(Message $message): bool
+    {
+        $routing_key = $message->parent()->getRoutingKey();
+        if ($this->consumers['type'] === $this->router()::SOME_CALLABLE) {
+            $fail = 0;
+            foreach ($this->consumers['func'] as $consumer) {
+                try {
+                    call_user_func($consumer, $message->getMessage());
+                    $this->sendHandledLog(
+                        get_class($consumer[0]),
+                        $consumer[1],
+                        $routing_key
+                    );
+                } catch (\Throwable $t) {
+                    $reason = $this->getTime() . $t->getMessage() . ' in ' . $t->getFile() . ':' . $t->getLine();
+                    $this->failed_consumers[$fail]['reason'] = $reason;
+                    $this->failed_consumers[$fail]['func'] = $consumer;
+                    $fail++;
+                    Log::error($reason);
+                    Help::print(
+                        $reason,
+                        'error'
+                    );
+                }
+            }
+        } else {
+            try {
+                dump('===========FIRE: ' . $message->getMessage());
+                call_user_func($this->consumers['func'], $message->getMessage());
+                $this->sendHandledLog(
+                    get_class($this->consumers['func'][0]),
+                    $this->consumers['func'][1],
+                    $routing_key
                 );
-                Log::error($e->getMessage());
-                Help::print($this->getTime() . 'Retrying...');
-                $this->tries++;
-                $this->consume($message);
+            } catch (\Throwable $t) {
+                $this->failed_consumers[0]['reason'] = $this->getTime() . $t->getMessage() . ' in ' . $t->getFile(
+                    ) . ':' . $t->getLine();
+                $this->failed_consumers[0]['func'] = $this->consumers['func'];
             }
         }
+        return empty($this->failed_consumers);
+    }
+
+    private function retry(Message $message)
+    {
+        $routing_key = $message->parent()->getRoutingKey();
+        while ($this->tries < $this->max_tries) {
+            foreach ($this->failed_consumers as $index => $failed_consumer) {
+                dump('engine fail process: ' . $message->getMessage());
+                if ($this->tries === 0) {
+                    Help::print(
+                        $failed_consumer['reason'],
+                        'error'
+                    );
+                }
+                $class_string = get_class($failed_consumer['func'][0]);
+                Help::print($this->getTime() . 'Retrying... ' . $class_string . '@' . $failed_consumer['func'][1]);
+                try {
+                    call_user_func($failed_consumer['func'], $message->getMessage());
+                    $this->sendHandledLog(
+                        $class_string,
+                        $failed_consumer['func'][1],
+                        $routing_key
+                    );
+                    unset($this->failed_consumers[$index]);
+                } catch (\Throwable $t) {
+                    Help::print(
+                        $this->getTime() . $t->getMessage() . ' in ' . $t->getFile() . ':' . $t->getLine(),
+                        'error'
+                    );
+                }
+            }
+            $this->tries++;
+        }
+
+        return empty($this->failed_consumers);
     }
 
     private function ack(Message $message): void
     {
+        dump('ack: ' . $message->getMessage());
         $message->ack();
-        $log = 'Message from ' . $message->parent()->getRoutingKey() . ' successfully handled by '
-            . $this->consumer_string[0] . '::' . $this->consumer_string[1];
-        Log::info($log);
-        Help::print($this->getTime() . $log);
         $this->checkMemory();
     }
 
@@ -138,14 +210,22 @@ class Consumer
         $message->nack();
     }
 
-    private function checkMemory()
+    private function sendHandledLog(string $class, string $method, string $routing_key): void
+    {
+        $log = 'Message from ' . $routing_key . ' successfully handled by '
+            . $class . '@' . $method;
+        Log::info($log);
+        Help::print($this->getTime() . $log);
+    }
+
+    private function checkMemory(): void
     {
         if (round(memory_get_usage() / 1024 / 1024, PHP_ROUND_HALF_DOWN) > $this->max_memory) {
             $this->stop();
         }
     }
 
-    private function stop()
+    private function stop(): void
     {
         Help::print($this->getTime() . 'Maximum memory usage exceeded, stopping...');
         exit;
@@ -154,5 +234,10 @@ class Consumer
     private function getTime(): string
     {
         return '[' . (new \DateTime())->format('Y-m-d H:i:s') . '] ';
+    }
+
+    private function router(): Router
+    {
+        return Instances::getRouter();
     }
 }

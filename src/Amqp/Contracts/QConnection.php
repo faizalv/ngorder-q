@@ -40,4 +40,9 @@ interface QConnection
      * @return array
      */
     public function getConfig(): array;
+
+    /**
+     * @return bool
+     */
+    public function isConnected(): bool;
 }

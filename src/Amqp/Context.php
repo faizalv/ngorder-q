@@ -10,7 +10,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 class Context implements QContext
 {
     private QConnection $connection;
-    private AMQPChannel $channel;
+    private object $channel;
     private ?string $exchange_name;
     private ?string $queue_name;
     private string $routing_key;

@@ -11,7 +11,7 @@ use Ngorder\Q\Publisher;
  * @method static void startFake()
  * @method static void stopFake()
  */
-class Message extends Facade
+class NgorderQ extends Facade
 {
     use Macroable;
 

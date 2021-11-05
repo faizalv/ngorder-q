@@ -9,9 +9,4 @@ class QServiceProvider extends BaseProvider
     protected array $routing = [
         //
     ];
-
-    public function boot(): void
-    {
-       parent::boot();
-    }
 }

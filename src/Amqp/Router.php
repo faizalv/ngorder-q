@@ -10,6 +10,9 @@ use Ngorder\Q\Amqp\Contracts\QContext;
 
 class Router
 {
+    public const ARRAY_CALLABLE = 'array_callable';
+    public const STRING_CALLABLE = 'string_callable';
+    public const SOME_CALLABLE = 'some_callable';
     private array $routing;
 
     public function __construct(array $routing)
@@ -29,21 +32,64 @@ class Router
 
     /**
      * @param string $routing_key
-     * @return array|null
+     * @return array
      * @throws Exception
      */
     public function getConsumer(string $routing_key): ?array
     {
-        if ($this->hasRegistered($routing_key)) {
-                $consumer = $this->routing[$routing_key];
-                if (is_array($consumer) && is_callable([new $consumer[0](), $consumer[1]])) {
-                    return [new $consumer[0](), $consumer[1]];
-                } elseif (is_callable(new $consumer())) {
-                    return [new $consumer(), '__invoke'];
-                }
-            return null;
+        if (!$this->hasRegistered($routing_key)) {
+            throw new Exception(
+                'Unknown routing key: [' . $routing_key . '] Be sure to register that routing key in QServiceProvider before using it'
+            );
         }
-        throw new Exception('Unknown routing key: [' . $routing_key . '] Be sure to register that routing key in QServiceProvider before using it');
+        $consumers = $this->routing[$routing_key];
+        if (is_array($consumers)) {
+            if (isset($consumers[0])) {
+                if (is_string($consumers[0]) && class_exists($consumers[0]) && isset($consumers[1])
+                    && is_string($consumers[1]) && is_callable([new $consumers[0](), $consumers[1]])) {
+                    return [
+                        'type' => self::ARRAY_CALLABLE,
+                        'func' => [
+                            new $consumers[0](),
+                            $consumers[1]
+                        ]
+                    ];
+                }
+
+                $list = [];
+                foreach ($consumers as $consumer) {
+                    if (is_string($consumer) && class_exists($consumer) && is_callable(new $consumer())) {
+                        $list[] = [
+                            new $consumer(),
+                            '__invoke'
+                        ];
+                    } elseif (is_array($consumer) && class_exists($consumer[0]) && is_callable(
+                            [new $consumer[0](), $consumer[1]]
+                        )) {
+                        $list[] = [
+                            new $consumer[0](),
+                            $consumer[1]
+                        ];
+                    }
+                }
+                if (!empty($list)) {
+                    return [
+                        'type' => self::SOME_CALLABLE,
+                        'count' => count($list),
+                        'func' => $list
+                    ];
+                }
+            }
+        } elseif (is_string($consumers) && class_exists($consumers) && is_callable(new $consumers())) {
+            return [
+                'type' => self::STRING_CALLABLE,
+                'func' => [
+                    new $consumers(),
+                    '__invoke'
+                ]
+            ];
+        }
+        throw new Exception('No callable is given');
     }
 
     public function send(Message $message, QConnection $connection, QContext $context): void
@@ -72,7 +118,9 @@ class Router
                 $callback,
             );
         } else {
-            throw new Exception('Unknown routing key: [' . $routing_key . '] Be sure to register that routing key in QServiceProvider before using it');
+            throw new Exception(
+                'Unknown routing key: [' . $routing_key . '] Be sure to register that routing key in QServiceProvider before using it'
+            );
         }
     }
 }
