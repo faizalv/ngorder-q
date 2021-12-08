@@ -101,12 +101,10 @@ class Consumer
     {
         $success = $this->fire($message);
         if ($success) {
-            dump('call ack: success');
             $this->ack($message);
         } else {
             $success_retry = $this->retry($message);
             if ($success_retry) {
-                dump('call ack: success retry');
                 $this->ack($message);
             } else {
                 $this->nack($message);
@@ -143,7 +141,6 @@ class Consumer
             }
         } else {
             try {
-                dump('===========FIRE: ' . $message->getMessage());
                 call_user_func($this->consumers['func'], $message->getMessage());
                 $this->sendHandledLog(
                     get_class($this->consumers['func'][0]),
@@ -164,7 +161,6 @@ class Consumer
         $routing_key = $message->parent()->getRoutingKey();
         while ($this->tries < $this->max_tries) {
             foreach ($this->failed_consumers as $index => $failed_consumer) {
-                dump('engine fail process: ' . $message->getMessage());
                 if ($this->tries === 0) {
                     Help::print(
                         $failed_consumer['reason'],
@@ -196,7 +192,6 @@ class Consumer
 
     private function ack(Message $message): void
     {
-        dump('ack: ' . $message->getMessage());
         $message->ack();
         $this->checkMemory();
     }
