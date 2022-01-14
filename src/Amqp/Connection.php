@@ -65,4 +65,10 @@ class Connection implements QConnection
     {
         return $this->connection->isConnected();
     }
+
+
+    public function closeConnection(): void
+    {
+        $this->connection->close();
+    }
 }

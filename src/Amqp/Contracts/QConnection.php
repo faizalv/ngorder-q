@@ -45,4 +45,9 @@ interface QConnection
      * @return bool
      */
     public function isConnected(): bool;
+
+    /**
+     * @return void
+     */
+    public function closeConnection(): void;
 }

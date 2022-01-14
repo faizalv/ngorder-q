@@ -223,6 +223,7 @@ class Consumer
     private function stop(): void
     {
         Help::print($this->getTime() . 'Maximum memory usage exceeded, stopping...');
+        $this->connection->closeConnection();
         exit;
     }
 

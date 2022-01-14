@@ -46,3 +46,11 @@ Refactor:
 ## 1.3.3 - 2021-11-05
 Feature:
 - Support multiple method to handle a routing key
+
+## 1.3.4 - 2021-12-08
+Refactor:
+- Remove error dumper
+
+## 1.3.5 - 2022-01-14
+Fix:
+- Close connection before exit
